@@ -33,9 +33,23 @@ async function getSession() {
 async function todoQuery() {
     const methodCalls = [
         ["Todo/query", { "accountId": "primary" }, "r1"],
-        ["Todo/get", { "accountId": "primary", "#ids": { "resultOf": "r1", "name": "Todo/query", "path": "/ids" } }, "r2"],
+        // **Modified: Get IDs from Todo/query and pass them directly to Todo/get**
+        ["Todo/get", { "accountId": "primary", "ids": [] }, "r2"], // Initially send empty ids, we'll populate later
     ];
-    return await jmapRequest(methodCalls);
+    const response = await jmapRequest(methodCalls);
+    if (response.methodResponses && response.methodResponses.length > 0) {
+        const queryResponse = response.methodResponses.find(resp => resp[0] === 'Todo/query');
+        if (queryResponse && queryResponse[1] && queryResponse[1].ids) {
+            const ids = queryResponse[1].ids;
+            // Now, update the 'Todo/get' method call in the response to include the ids
+            const getMethodCall = response.methodResponses.find(resp => resp[0] === 'Todo/get');
+            if (getMethodCall && getMethodCall[1]) {
+                getMethodCall[1].ids = ids; // Set the 'ids' directly in the Todo/get response arguments
+            }
+        }
+        return response;
+    }
+    return response;
 }
 
 async function todoSet(create, update, destroy) {
