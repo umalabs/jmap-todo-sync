@@ -177,11 +177,12 @@ func handleTodoQuery(db *sql.DB, args map[string]interface{}) (map[string]interf
 	}
 
 	// Extract the "Todo/query" method response part
-	for _, methodResp := range respMap["methodResponses"].([][]interface{}) {
-		if methodResp[0] == "Todo/query" {
-			return methodResp[1].(map[string]interface{}), nil
+	for _, methodResp := range respMap["methodResponses"].([]interface{}) {
+		if methodResp.([]interface{})[0] == "Todo/query" {
+			return methodResp.([]interface{})[1].(map[string]interface{}), nil
 		}
 	}
+
 	return nil, fmt.Errorf("todo/query response not found in marshaled data")
 }
 
